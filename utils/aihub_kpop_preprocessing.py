@@ -58,7 +58,9 @@ for (root, directores, files) in os.walk(annotation_dir):
                 
                 csv_list.append(line)
 
+index = ['id', 'file_name', 'file_path', 'bbox', 'num_keypoints', 'keypoints']
 with open(csv_filepath, 'w', encoding='utf-8', newline='') as cf:
     wr = csv.writer(cf)
+    wr.writerow(index)
     for l in csv_list:
         wr.writerow(l)
