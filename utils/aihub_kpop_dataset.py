@@ -1,6 +1,8 @@
 import os
 import torch
 import pandas as pd
+import csv
+import ast
 
 from pathlib import Path
 from torch.utils.data import Dataset
@@ -15,50 +17,24 @@ annotation_dir = data_path / 'annotation'
 image_dir = data_path / 'image'
 annotation_file_path = annotation_dir / 'annotation.csv'
 
-def kpopimgT(img, bbox:tuple):
+def kpopimgT(img, bbox:list):
     l, t, w, h = bbox
     img = crop(img, top=t, left=l, height=h, width=w)
-    img = resize(img, 256)  # resize to 256 x 256
+    img = resize(img, (256, 256))  # resize to 256 x 256
     return img
     
 
-def kpoplabelT(joints, bbox:tuple):
+def kpoplabelT(joints, bbox:list):
     l, t, w, h = bbox
     empty_list = []
     for i in range(29):
-        x, y, v = joints[i], joints[i+1], joints[i+2]
-        x = (x - l) / w
-        y = (y - t) / h
+        x, y, v = joints[3*i], joints[3*i+1], joints[3*i+2]
+        x = (x - l)/w
+        y = (y - t)/h
         empty_list.append((x, y))
     
-    return empty_list
+    return torch.Tensor(empty_list)
 
-class KpopImageDataset(Dataset):
-    def __init__(self, annotations_file, transform=None, target_transform=None):
-        self.img_labels = pd.read_csv(annotations_file)
-        self.transform = transform
-        self.target_transform = target_transform
-        
-    def __len__(self):
-        return len(self.img_labels)
-    
-    def __getitem__(self, idx):
-        line = self.img_labels[idx]
-        img_path = line[2]
-        image = read_image(img_path)
-        label = line[5]
-        
-        # for transform
-        bbox = line[3]
-        # l, t, w, h = bbox
-        
-        if self.transform:
-            image = self.transform(image)
-        if self.target_transform:
-            label = self.target_transform(label)
-            
-        return image, label
-    
 class KpopImageDatasetwT(Dataset):
     # KpopImageDataset with Transform
     def __init__(self, annotations_file=annotation_file_path):
@@ -68,16 +44,20 @@ class KpopImageDatasetwT(Dataset):
         return len(self.img_labels)
     
     def __getitem__(self, idx):
-        line = self.img_labels[idx]
+        line = self.img_labels.loc[idx]
         img_path = line[2]
         image = read_image(img_path)
-        label = line[5]
+        label = ast.literal_eval(line[5])
         
         # for transform
-        bbox = line[3]
+        bbox = ast.literal_eval(line[3])
         # l, t, w, h = bbox
 
         image = kpopimgT(image, bbox)
         label = kpoplabelT(label, bbox)
             
         return image, label
+
+# testdataset = KpopImageDatasetwT()
+# print(testdataset.__len__())
+# print(testdataset.__getitem__(0))
