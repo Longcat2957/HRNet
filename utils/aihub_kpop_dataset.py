@@ -1,7 +1,6 @@
 import os
 import torch
 import pandas as pd
-import csv
 import ast
 
 from pathlib import Path
@@ -20,7 +19,7 @@ annotation_file_path = annotation_dir / 'annotation.csv'
 def kpopimgT(img, bbox:list):
     l, t, w, h = bbox
     img = crop(img, top=t, left=l, height=h, width=w)
-    img = resize(img, (256, 256))  # resize to 256 x 256
+    img = resize(img, (256, 192))  # resize to 256 x 192
     return img
     
 
