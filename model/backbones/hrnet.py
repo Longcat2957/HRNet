@@ -128,7 +128,7 @@ class HRModule(nn.Module):
     def __init__(self, num_branches, num_channels, ms_output=True):
         super().__init__()
         self.num_branches = num_branches
-        self.brances = nn.ModuleList([
+        self.branches = nn.ModuleList([
             nn.Sequential(*[
                 BasicBlock(num_channels[i], num_channels[i])
             for _ in range(4)])
@@ -139,25 +139,25 @@ class HRModule(nn.Module):
         
     def _make_fuse_layers(self, num_branches, num_channels, ms_output=True):
         fuse_layers = []
-        
+
         for i in range(num_branches if ms_output else 1):
             fuse_layer = []
-            
+
             for j in range(num_branches):
                 if j > i:
                     fuse_layer.append(
                         nn.Sequential(
                             nn.Conv2d(num_channels[j], num_channels[i], 1, bias=False),
                             nn.BatchNorm2d(num_channels[i]),
-                            nn.Upsample(scale_factor=2**(j-1), mode='nearest')
+                            nn.Upsample(scale_factor=2**(j-i), mode='nearest')
                         )
                     )
-                elif j==i:
+                elif j == i:
                     fuse_layer.append(None)
-                else: # j < i, need Downsample by 3x3kernel
+                else:
                     conv3x3s = []
                     for k in range(i-j):
-                        if k == i - j - 1:
+                        if k == i - j -1:
                             conv3x3s.append(
                                 nn.Sequential(
                                     nn.Conv2d(num_channels[j], num_channels[i], 3, 2, 1, bias=False),
@@ -168,18 +168,18 @@ class HRModule(nn.Module):
                             conv3x3s.append(Conv(num_channels[j], num_channels[j], 3, 2, 1))
                     fuse_layer.append(nn.Sequential(*conv3x3s))
             fuse_layers.append(nn.ModuleList(fuse_layer))
-            
+        
         return nn.ModuleList(fuse_layers)
-    
-    def forward(self, x:Tensor):
+
+    def forward(self, x: Tensor) -> Tensor:
         for i, m in enumerate(self.branches):
             x[i] = m(x[i])
 
         x_fuse = []
-        
+
         for i, fm in enumerate(self.fuse_layers):
             y = x[0] if i == 0 else fm[0](x[0])
-            
+
             for j in range(1, self.num_branches):
                 y = y + x[j] if i == j else y + fm[j](x[j])
             x_fuse.append(self.relu(y))

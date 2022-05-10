@@ -28,3 +28,9 @@ class PoseHRNet(nn.Module):
         out = self.backbone(x)
         out = self.final_layer(out)
         return out
+    
+if __name__ == '__main__':
+    model = PoseHRNet('w48')
+    x = torch.randn(1, 3, 256, 192)
+    y = model(x)
+    print(y.shape)
