@@ -1,14 +1,23 @@
+import math
 import torch
+import numpy as np
 from torch import nn, Tensor
 from .backbones import HRNet
 
+
 class PoseHRNet(nn.Module):
+    """
+    Attribute
+    =========
+    bacbone: str = 'w18', 'w32', 'w48'
+    num_joints: int = 17, 25, 29
+    """
     def __init__(self, backbone: str = 'w32', num_joints: int = 17):
         # COCO Detection의 경우 17개의 조인트를 사용하고 있다.
         super().__init__()
         self.backbone = HRNet(backbone)
-        self.final_layer = nn.Conv2d(self.backbone.all_channels[0], num_joints, 1)
-        
+        self.pd_layer = nn.Conv2d(self.backbone.all_channels[0], num_joints, 1)
+
         self.apply(self._init_weights)
         
     def _init_weights(self, m: nn.Module):
@@ -26,7 +35,8 @@ class PoseHRNet(nn.Module):
     
     def forward(self, x: Tensor):
         out = self.backbone(x)
-        out = self.final_layer(out)
+        out = self.pd_layer(out)
+
         return out
     
 if __name__ == '__main__':
