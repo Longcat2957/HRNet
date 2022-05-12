@@ -17,6 +17,7 @@ class PoseHRNet(nn.Module):
         super().__init__()
         self.backbone = HRNet(backbone)
         self.pd_layer = nn.Conv2d(self.backbone.all_channels[0], num_joints, 1)
+        self.num_joints = num_joints
 
         self.apply(self._init_weights)
         

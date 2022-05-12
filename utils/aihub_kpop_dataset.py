@@ -2,6 +2,8 @@ import os
 import torch
 import pandas as pd
 import ast
+from torch import Tensor
+
 
 from pathlib import Path
 from torch.utils.data import Dataset
@@ -19,7 +21,7 @@ annotation_file_path = annotation_dir / 'annotation.csv'
 def kpopimgT(img, bbox:list):
     l, t, w, h = bbox
     img = crop(img, top=t, left=l, height=h, width=w)
-    img = resize(img, (256, 192))  # resize to 256 x 192
+    img = resize(img, (256, 256))  # resize to 256 x 192
     return img
     
 
@@ -30,9 +32,13 @@ def kpoplabelT(joints, bbox:list):
         x, y, v = joints[3*i], joints[3*i+1], joints[3*i+2]
         x = (x - l)/w
         y = (y - t)/h
-        empty_list.append((x, y))
+        empty_list.append((y, x))
+    # BBOX의 상대적인 위치
     
+    
+    # (B, joints_num, (y, x)) ---> (B, joints_num, 64, 64) 
     return torch.Tensor(empty_list)
+
 
 class KpopImageDatasetwT(Dataset):
     # KpopImageDataset with Transform
