@@ -9,6 +9,7 @@ from pathlib import Path
 from torch.utils.data import Dataset
 from torchvision.io import read_image   # Reads a JPEG or PNG image into a 3 dimensional RGB or grayscale Tensor. Optionally converts the image to the desired format. The values of the output tensor are uint8 in [0, 255].
 from torchvision.transforms.functional import crop, resize
+from target_generators import ScaleAwareHeatmapGenerator
 
 # Directory
 current_path = Path(os.path.dirname(os.path.abspath(__file__))) # ../HRNET/utils 의 절대 경로
@@ -32,11 +33,10 @@ def kpoplabelT(joints, bbox:list):
         x, y, v = joints[3*i], joints[3*i+1], joints[3*i+2]
         x = (x - l)/w
         y = (y - t)/h
-        empty_list.append((y, x))
+        empty_list.append((y, x, v))
     # BBOX의 상대적인 위치
-    
-    
-    # (B, joints_num, (y, x)) ---> (B, joints_num, 64, 64) 
+    # visibility = 0, 1, 2
+
     return torch.Tensor(empty_list)
 
 
@@ -44,6 +44,8 @@ class KpopImageDatasetwT(Dataset):
     # KpopImageDataset with Transform
     def __init__(self, annotations_file=annotation_file_path):
         self.img_labels = pd.read_csv(annotations_file)
+        self.num_joints = 29
+        self.label_transformer = ScaleAwareHeatmapGenerator(output_res=64, num_joints=self.num_joints)
         
     def __len__(self):
         return len(self.img_labels)
@@ -60,7 +62,8 @@ class KpopImageDatasetwT(Dataset):
 
         image = kpopimgT(image, bbox)
         label = kpoplabelT(label, bbox)
-            
+        label = self.label_transformer(label)
+        
         return image, label
 
 # testdataset = KpopImageDatasetwT()

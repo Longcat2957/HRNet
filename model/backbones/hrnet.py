@@ -351,7 +351,7 @@ class HRNet(nn.Module):
         # # Stage 4
         x_list = [trans(y_list[-1]) if trans is not None else y_list[i] for i, trans in enumerate(self.transition3)]
         y_list = self.stage4(x_list)
-        return y_list[0]
+        return y_list[0]        # Representatio Head로 HRNetV1을 사용하고 있다. (최종 레이어의 원본 해상도와 같은 첫 번째 레이어만 리턴)
     
 if __name__ == '__main__':
     model = HRNet('w32')
