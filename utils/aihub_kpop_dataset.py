@@ -35,7 +35,7 @@ def kpoplabelT(joints, bbox:list, sigma:int=1):
         if v > 0:
             for a in range(64):
                 for b in range(64):
-                    zero[a][b] = math.exp(-((64 * rx - b)**2+(64 * ry - a)**2)/(2 * sigma**2))
+                    zero[a][b] = (1/(2 * math.pi)) * math.exp(-((64 * rx - b)**2+(64 * ry - a)**2)/(2 * sigma**2))
         empty_list.append(zero)
     # BBOX의 절대적인 위치를 리턴
     # visibility = 0, 1, 2
