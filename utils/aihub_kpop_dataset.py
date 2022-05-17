@@ -35,9 +35,9 @@ def kpoplabelT(joints, bbox:list, sigma:int=1):
         if v > 0:
             for a in range(64):
                 for b in range(64):
-                    zero[a][b] = (1/(2 * math.pi)) * math.exp(-((64 * rx - b)**2+(64 * ry - a)**2)/(2 * sigma**2))
+                    zero[a][b] = (1/(2 * math.pi) * sigma) * math.exp(-((64 * rx - b)**2+(64 * ry - a)**2)/(2 * sigma**2))
         empty_list.append(zero)
-    # BBOX의 절대적인 위치를 리턴
+    # 가우시안 분포를 리턴합니다.
     # visibility = 0, 1, 2
     return torch.Tensor(empty_list)
 
@@ -50,7 +50,7 @@ class KpopImageDatasetwT(Dataset):
         self.label_transform = torch.nn.UpsamplingNearest2d(size=(64,64))
         self.img_T = transforms.Compose([transforms.Resize((256, 256)),
                                          transforms.ToTensor(),
-                                         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+                                         transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))])
         
     def __len__(self):
         return len(self.img_labels)
@@ -58,13 +58,13 @@ class KpopImageDatasetwT(Dataset):
     def __getitem__(self, idx):
         line = self.img_labels.loc[idx]
         img_path = line[2]
-        image = Image.open(img_path)
+        image = Image.open(img_path)        #image -> PIL Image Format
         label = ast.literal_eval(line[5])
         
         # for transform
         bbox = ast.literal_eval(line[3])
-        # l, t, w, h = bbox
-
+        l, t, w, h = bbox                   # bbox 범위만큼 원본 이미지를 크롭
+        image = image.crop((l, t, l+w, t+h))
         image = self.img_T(image)
         label = kpoplabelT(label, bbox)
 
