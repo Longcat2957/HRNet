@@ -4,6 +4,7 @@ import pandas as pd
 import ast
 import numpy as np
 import math
+import numpy as np
 
 from PIL import Image
 from scipy import ndimage
@@ -26,7 +27,7 @@ annotation_file_path = annotation_dir / 'annotation.csv'
 
 def kpoplabelT(joints, bbox:list, sigma:int=1):
     l, t, w, h = bbox
-    empty_list = []
+    empty_list = np.zeros((29, 64, 64))
     for i in range(29):
         x, y, v = joints[3*i], joints[3*i+1], joints[3*i+2]
         rx, ry = (x-l)/w, (y-t)/h
@@ -36,7 +37,7 @@ def kpoplabelT(joints, bbox:list, sigma:int=1):
             for a in range(64):
                 for b in range(64):
                     zero[a][b] = (1/(2 * math.pi) * sigma) * math.exp(-((64 * rx - b)**2+(64 * ry - a)**2)/(2 * sigma**2))
-        empty_list.append(zero)
+        empty_list[i, :] = zero
     # 가우시안 분포를 리턴합니다.
     # visibility = 0, 1, 2
     return torch.Tensor(empty_list)
