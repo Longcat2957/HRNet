@@ -5,7 +5,7 @@ from torch import nn, Tensor
 class HeatmapGEval(nn.Module):
     def __init__(self, sigma=1):
         super().__init__()
-        self.sigma = 1
+        self.sigma = sigma
     def __call__(self, pred:Tensor, answer:Tensor):
         
         B_pred, C_pred, H_pred, W_pred = pred.shape
